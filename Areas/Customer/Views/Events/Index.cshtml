@@ -1,0 +1,75 @@
+﻿@model IEnumerable<Event>
+
+<div class="container mt-4">
+    @foreach (var evn in Model)
+    {
+        <div class="mb-4">
+            <div class="card border-0 p-4 shadow rounded">
+                <div class="card-body">
+                    <h5 class="card-title text-dark text-center mb-3">@Html.Raw(evn.Title)</h5>
+                    <p class="card-text text-center">@Html.Raw(evn.Description)</p>
+                    <button class="btn btn-primary btn-book-now" data-event-id="@evn.Id" data-user-id="@User.Identity.Name">Book Now</button>
+                </div>
+                <!-- Additional content here if needed -->
+            </div>
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            var bookedEvents = JSON.parse(localStorage.getItem('bookedEvents')) || {};
+
+            var bookNowButtons = document.querySelectorAll('.btn-book-now');
+
+            bookNowButtons.forEach(function (button) {
+                var eventId = button.getAttribute('data-event-id');
+                var userId = button.getAttribute('data-user-id');
+                var userBookedEvents = bookedEvents[userId] || [];
+
+                if (userBookedEvents.includes(eventId)) {
+                    // Event has already been booked by the current user, update button text
+                    button.innerText = 'Booked!';
+                    button.disabled = true;
+                } else {
+                    // Event has not been booked, add click event listener
+                    button.addEventListener('click', function () {
+                        bookEvent(eventId, userId);
+                    });
+                }
+            });
+
+            function bookEvent(eventId, userId) {
+                // Perform booking logic here (you can use AJAX to communicate with the server)
+                // For demonstration purposes, we'll simulate a successful booking
+                Swal.fire({
+                    title: 'Book Event',
+                    text: 'Are you sure you want to book this event?',
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonColor: '#3085d6',
+                    cancelButtonColor: '#d33',
+                    confirmButtonText: 'Yes, book it!'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        // Update local storage to remember the booked event for the current user
+                        var userBookedEvents = bookedEvents[userId] || [];
+                        userBookedEvents.push(eventId);
+                        bookedEvents[userId] = userBookedEvents;
+                        localStorage.setItem('bookedEvents', JSON.stringify(bookedEvents));
+
+                        // Change the button text to "Booked!"
+                        var button = document.querySelector('.btn-book-now[data-event-id="' + eventId + '"]');
+                        if (button) {
+                            button.innerText = 'Booked!';
+                            button.disabled = true;
+                        }
+
+                        toastr.success('Event booked successfully!');
+                    }
+                });
+            }
+        });
+    </script>
+}
